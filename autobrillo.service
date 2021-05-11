@@ -1,0 +1,9 @@
+[Unit]
+Description=AutoBrillo
+
+[Service]
+ExecStart=/usr/bin/autobrillo
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target 

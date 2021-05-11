@@ -1,0 +1,55 @@
+#!/bin/bash
+
+backlight=$(ls /sys/class/backlight/)
+
+TIME_SUNRISE=7
+TIME_SUNSET=19
+RUSH_HOUR_START=12
+RUSH_HOUR_END=14
+
+MIN_BRIGHT=33
+MAX_BRIGHT=70
+
+STEP=$(echo "($MAX_BRIGHT - $MIN_BRIGHT) / ($RUSH_HOUR_START - $TIME_SUNRISE)")
+
+# in minutes
+REFRESH_TIME=15
+
+set_bright () {
+	echo $1 | tee "/sys/class/backlight/$backlight/brightness"
+}
+
+auto_bright () {
+	HORA_ACTUAL=$(date +%H)
+	
+    # Antes del amanecer o después de anocher
+	if [[ $HORA_ACTUAL -lt $TIME_SUNRISE ]] || [[ $HORA_ACTUAL -ge $TIME_SUNSET ]]; then
+		set_bright $MIN_BRIGHT
+	else
+        # dentro del horario pico
+		if [[ $HORA_ACTUAL -ge $RUSH_HOUR_START ]] && [[ $HORA_ACTUAL -le $RUSH_HOUR_END ]] ; then
+			set_bright $MAX_BRIGHT
+		else
+            # por la mañana antes de las horas-pico
+			if [[ $HORA_ACTUAL -lt $RUSH_HOUR_START ]]; then
+				BRILLO=$(echo "$MIN_BRIGHT + $STEP * ($HORA_ACTUAL - $TIME_SUNRISE)" |bc)
+				set_bright $BRILLO
+			else
+				# después de las horas-pico y antes del anochecer
+				BRILLO=$(echo "$MAX_BRIGHT - $STEP * ($HORA_ACTUAL - $RUSH_HOUR_END)" |bc)
+				set_bright $BRILLO
+			fi
+		fi
+	fi
+}
+
+
+SECS=$(echo "$REFRESH_TIME * 60" |bc)
+
+
+while true; do
+  auto_bright 
+  sleep $SECS
+done
+
+
