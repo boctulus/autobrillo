@@ -8,20 +8,18 @@ RUSH_HOUR_END=14
 MIN_BRIGHT=27
 MAX_BRIGHT=50   
 
-SLOPE=$(echo "($MAX_BRIGHT - $MIN_BRIGHT) / ($RUSH_HOUR_START - $TIME_SUNRISE)")
-
 # in minutes
 REFRESH_TIME=5
 
-set_bright () {
-    echo Seteando brillo en $1
+SLOPE=$(echo "($MAX_BRIGHT - $MIN_BRIGHT) / ($RUSH_HOUR_START - $TIME_SUNRISE)")
 
-    backlight=$(ls /sys/class/backlight/)
+set_bright () {
+    local backlight=$(ls /sys/class/backlight/)
 	echo $1 | tee "/sys/class/backlight/$backlight/brightness"
 }
 
 get_bright () {
-	HORA_ACTUAL=$(date +%H |bc)
+	local HORA_ACTUAL=$(date +%H |bc)
 	
     # Antes del amanecer o después de anocher
 	if [[ $HORA_ACTUAL -le $TIME_SUNRISE ]] || [[ $HORA_ACTUAL -ge $TIME_SUNSET ]]; then
